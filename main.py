@@ -1,7 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from crewai import Agent, Task, Crew
-import openai
 import os
 from dotenv import load_dotenv
 
@@ -14,14 +13,6 @@ class StoryRequest(BaseModel):
     duration_seconds: int = 36
     number_of_scenes: int = 7
 
-class Scene(BaseModel):
-    scene_number: int
-    description: str
-    duration_seconds: float
-    location: str = "various"
-    action: str = "adventure"
-    mood: str = "cheerful"
-
 class StoryResponse(BaseModel):
     title: str
     total_duration: int
@@ -31,7 +22,6 @@ class StoryResponse(BaseModel):
 @app.post("/generate-story")
 async def generate_story(request: StoryRequest):
     try:
-        # Create agent without LLM specification to use default
         story_agent = Agent(
             role='Duecey Adventure Story Creator',
             goal='Create engaging, short-form stories for Duecey the Shih Tzu puppy',
@@ -61,8 +51,7 @@ async def generate_story(request: StoryRequest):
             
             Focus on visual actions that animate well.
             """,
-            agent=story_agent,
-            expected_output="A structured story with title and scene descriptions"
+            agent=story_agent
         )
         
         crew = Crew(
@@ -79,7 +68,7 @@ async def generate_story(request: StoryRequest):
         scenes = []
         scene_duration = request.duration_seconds / request.number_of_scenes
         
-        # Extract title if present
+        # Extract title
         for line in lines:
             if "Title:" in line:
                 title = line.replace("Title:", "").strip()
